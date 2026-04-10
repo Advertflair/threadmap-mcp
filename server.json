@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.advertflair/threadmap-mcp",
-  "description": "ThreadMap MCP for Claude — conversation drift visualization with color-coded inflection points and one-click forking. Track how far your conversation has drifted from its original intent, and fork from any point to resume with clean context.",
+  "description": "Conversation drift visualization for Claude. Color-coded inflection points and one-click forking.",
   "repository": {
     "url": "https://github.com/Advertflair/threadmap-mcp",
     "source": "github"
