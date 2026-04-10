@@ -6,6 +6,18 @@
 
 ---
 
+## See it in action
+
+**Color dots on every message — live drift tracking:**
+
+![ThreadMap drift dots demo](docs/threadmap-demo.gif)
+
+**Timeline panel with fork buttons at every inflection point:**
+
+![ThreadMap timeline panel](docs/threadmap-timeline.gif)
+
+---
+
 ## The Problem
 
 You start a Claude session: *"Build me a login system."*
@@ -59,6 +71,15 @@ Add to your MCP config (`~/.claude/claude_desktop_config.json` or similar):
   }
 }
 ```
+
+### Chrome Extension (visual dots in claude.ai)
+
+For color dots directly inside claude.ai, install the Chrome extension:
+
+1. Download the [`threadmap-chrome`](./threadmap-chrome) folder
+2. Go to `chrome://extensions` → enable **Developer mode**
+3. Click **Load unpacked** → select the folder
+4. Open claude.ai — dots appear automatically
 
 ---
 
@@ -143,11 +164,7 @@ Branch ID: branch_1712345678
 Forked at: Message #7 — refresh token keeps expiring
 Context: 7 messages carried forward
 Origin preserved: build me a login system with JWT auth
-
-Resume with: threadmap_branch_context branchId: branch_1712345678
 ```
-
-Now you have a **clean branch** with only the auth architecture context — no rabbit holes, no off-topic debugging contaminating Claude's context.
 
 ### 4. Resume from the branch
 
@@ -157,23 +174,6 @@ threadmap_branch_context(
   branchId="branch_1712345678"
 )
 ```
-
-Response:
-```
-🌿 Branch Context: "jwt-debug"
-Original Intent: build me a login system with JWT auth
-Fork Point: Message #7
-Messages in branch: 7
-
-Recent context (last 5):
-USER: add refresh token support
-Claude: here's the refresh token implementation...
-USER: the expiry time seems off
-Claude: let me check the token configuration...
-USER: refresh token keeps expiring after 30 seconds
-```
-
-Use this to anchor a clean focused session — without the drift.
 
 ---
 
@@ -188,12 +188,10 @@ Track a message and get its drift score.
 | `role` | `"user"` \| `"assistant"` | Who sent the message |
 | `content` | string | The message text |
 
-Returns: color, drift %, topic summary, inflection point alert if triggered.
-
 ---
 
 ### `threadmap_timeline`
-Show the full color-coded conversation map with all drift scores, inflection points, and branch markers.
+Show the full color-coded conversation map.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -208,9 +206,7 @@ Fork from any message index with clean context.
 |-----------|------|-------------|
 | `sessionId` | string | Session to fork from |
 | `messageIndex` | number | 0-based index of the fork point |
-| `branchName` | string | Name for the branch (e.g. `"auth-restart"`, `"back-to-origin"`) |
-
-Returns: branch ID, fork point summary, context size.
+| `branchName` | string | Name for the branch |
 
 ---
 
@@ -222,42 +218,36 @@ Get the context packet for a branch to resume cleanly.
 | `sessionId` | string | Session ID |
 | `branchId` | string | Branch ID from `threadmap_fork` |
 
-Returns: original intent, fork point, recent messages — everything needed to anchor a new Claude session.
-
 ---
 
 ### `threadmap_status`
-Quick current drift check without loading the full timeline.
+Quick current drift check.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `sessionId` | string | Session to check |
 
-Returns: current color, drift %, message count, warning if drift is high.
-
 ---
 
 ### `threadmap_reset`
-Archive current thread and start fresh with a new origin.
+Archive current thread and start fresh.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `sessionId` | string | Session to reset |
-| `newOriginContent` | string | New starting message to set as origin |
-
-Old thread is archived as a branch. Fresh tracking begins.
+| `newOriginContent` | string | New starting message |
 
 ---
 
 ### `threadmap_legend`
-Show the color reference guide — useful to paste into any Claude session.
+Show the color reference guide.
 
 ---
 
 ## Real-World Use Cases
 
 ### Claude Code — Architecture Integrity
-You're building a feature with Claude Code. Start the session, track every message. When you see Orange, scope is creeping. Fork before the drift gets worse. The architecture decisions from the first 10 messages stay clean and uncontaminated.
+Track every message. When you see Orange, scope is creeping. Fork before the drift gets worse.
 
 ```
 Session: "build a user dashboard with real-time updates"
@@ -266,22 +256,14 @@ Message 6-8:   🟡🟡🟠         (WebSocket config tangent) ← fork here
 Message 9-15:  🔴🔴🟣🔴       (deep debugging rabbit hole)
 ```
 
-Fork at message 6. Tackle the WebSocket issue in a clean separate branch. Main architecture stays untouched.
-
----
-
 ### Long Research Sessions — Stay on Topic
-Long Claude research conversations drift naturally. ThreadMap shows you exactly when you left the original question. Jump back to the moment before the drift with one fork.
-
----
+ThreadMap shows you exactly when you left the original question. Jump back to the moment before the drift.
 
 ### Brainstorming — Preserve the Original Spark
-You have an idea, the conversation gets messy exploring it, and the original insight gets buried. ThreadMap keeps a pointer to the first moment of clarity — fork back to it anytime.
-
----
+ThreadMap keeps a pointer to the first moment of clarity — fork back to it anytime.
 
 ### Team Handoffs — Clean Context Packets
-Use `threadmap_branch_context` to extract a clean summary of exactly what was decided up to any point. Drop it into a new Claude session. No scrolling through 200 messages to find the relevant decisions.
+Use `threadmap_branch_context` to extract a clean summary of what was decided. Drop it into a new Claude session.
 
 ---
 
@@ -289,55 +271,39 @@ Use `threadmap_branch_context` to extract a clean summary of exactly what was de
 
 - **Zero external API calls** — drift scoring runs locally using keyword-based semantic comparison
 - **No database required** — in-memory session state, zero setup
-- **Stateless across restarts** — sessions reset cleanly, lightweight by design
 - **Works with Claude Code natively** via MCP protocol
-- **Future-ready** — designed to support local embedding models (MiniLM) for richer semantic drift scoring
+- **Chrome extension** for visual dots in claude.ai
 
 ---
 
 ## Why Open Source?
 
-This should be a **protocol**, not a product.
+This should be a **protocol**, not a product. Like Markdown. Like Git.
 
-Like Markdown defined how people write on the internet. Like Git defined how code is versioned.
-
-**Non-linear conversation navigation is the missing primitive for AI-native work.**
-
-Right now Claude conversations are books with no table of contents, no chapters, no bookmarks. You just scroll. Nobody would accept that from a book. We accept it from AI because we don't know better yet.
-
-ThreadMap MCP for Claude is the table of contents. The chapter marker. The ability to fork — and pick up from any margin at will.
-
-If this becomes the standard, it travels across Claude, GPT, Gemini, anything. Nobody owns it. Everybody benefits.
+Non-linear conversation navigation is the missing primitive for AI-native work. If this becomes the standard, it travels across Claude, GPT, Gemini, anything. Nobody owns it. Everybody benefits.
 
 ---
 
 ## Roadmap
 
 - [ ] Local embedding model support (MiniLM) for richer semantic scoring
-- [ ] Visual timeline export (SVG/HTML mini-map)
-- [ ] Cross-session branch persistence (optional SQLite mode)
-- [ ] Shared learning layer — anonymous correction signals improve scoring across users
-- [ ] Native Claude.ai extension when Anthropic opens the plugin API
+- [ ] Visual timeline export (SVG/HTML)
+- [ ] Cross-session persistence (SQLite mode)
+- [ ] Chrome extension on Chrome Web Store
 - [ ] GPT / Gemini compatibility
 
 ---
 
 ## Contributing
 
-MIT licensed. Fork it, extend it, publish it.
+MIT licensed. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ```bash
 git clone https://github.com/Advertflair/threadmap-mcp
 cd threadmap-mcp
 npm install
 npm run build
-npm run dev   # runs locally for testing
 ```
-
-Issues and PRs welcome. Especially interested in:
-- Better drift scoring algorithms
-- More granular color thresholds
-- Integrations with other AI platforms
 
 ---
 
@@ -347,4 +313,4 @@ MIT — see [LICENSE](./LICENSE)
 
 ---
 
-*Built by [Advertflair](https://advertflair.com). Open source. Ship it. See what happens.*
+*Built by [Advertflair](https://advertflair.com). Open source. Ship it.*
