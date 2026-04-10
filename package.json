@@ -1,7 +1,7 @@
 {
   "name": "threadmap-mcp",
   "version": "1.0.0",
-  "mcpName": "io.github.advertflair/threadmap-mcp",
+  "mcpName": "io.github.Advertflair/threadmap-mcp",
   "description": "ThreadMap MCP for Claude — conversation drift visualization, color-coded inflection points, and one-click forking. Never lose your original intent.",
   "main": "dist/index.js",
   "bin": {
