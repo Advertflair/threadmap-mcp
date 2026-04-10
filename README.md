@@ -18,278 +18,161 @@
 
 ---
 
-## The Problem
+## Two ways to use ThreadMap
 
-You start a Claude session: *"Build me a login system."*
+| | MCP Server | Chrome Extension |
+|---|---|---|
+| **Works in** | Claude Code (terminal) | claude.ai (browser) |
+| **Install** | `claude mcp add threadmap npx threadmap-mcp` | Load unpacked from `chrome-extension/` folder |
+| **What you get** | 7 tools — track, timeline, fork, branch | Color dots on every message, timeline panel, one-click fork |
+| **Best for** | Developers building with Claude Code | Anyone using claude.ai daily |
 
-Three hours later you're deep in a JWT refresh token bug, the original architecture is buried under 80 messages, and Claude has completely lost track of what you were building. You've wasted tokens, lost context, and have to start over.
-
-**ThreadMap MCP for Claude fixes this.**
-
----
-
-## How It Works
-
-ThreadMap MCP for Claude tracks every message and assigns it a **color based on semantic drift** from your original intent:
-
-| Color | Drift | Meaning |
-|-------|-------|---------|
-| 🔵 Blue | 0–15% | On track — core intent |
-| 🟢 Green | 16–35% | Productive expansion |
-| 🟡 Yellow | 36–55% | Adjacent drift — related but expanding |
-| 🟠 Orange | 56–72% | **Inflection point** — meaningful pivot |
-| 🔴 Red | 73–88% | Full context break — different territory |
-| 🟣 Purple | 89–95% | Meta — talking about the conversation |
-| ⚪ White | 96–100% | Resolution — conclusion reached |
-
-When you hit **Orange or Red**, ThreadMap flags it as an **inflection point**. You can fork the conversation right there — creating a clean branch with only the context up to that moment. Claude in that branch doesn't know about the drift. Fresh start, without losing history.
+Both are in this repo. Use one or both.
 
 ---
 
-## Install
+## Chrome Extension — Visual dots in claude.ai
 
-### Claude Code (one line)
+The Chrome extension injects ThreadMap directly into the claude.ai interface. No config. Just install and open Claude.
+
+### Install (2 minutes)
+
+```
+1. Clone or download this repo
+2. Open Chrome → chrome://extensions
+3. Enable Developer mode (top right toggle)
+4. Click Load unpacked → select the chrome-extension folder
+5. Open any Claude conversation — ThreadMap activates automatically
+```
+
+### What you see
+
+- **Color dot** next to every message showing drift % from your original intent
+- **Sticky bar** at the top with live drift status and message count
+- **↺ rescan** — loads all messages from long previous conversations
+- **timeline** — full conversation map, click any row to jump to that message
+- **⑂ fork** — opens a new Claude chat with full context pre-loaded in the input
+
+### How forking works
+
+1. Click **⑂ fork** in the timeline or next to any message bubble
+2. A new claude.ai tab opens automatically
+3. The full context (origin intent + all messages up to that point) is pasted into the input
+4. Review and hit Send — Claude picks up from the clean version
+
+### Chrome extension files
+
+```
+chrome-extension/
+├── manifest.json     — Extension config (Manifest v3)
+├── content.js        — Core drift engine + DOM injection
+├── threadmap.css     — All injected styles
+├── popup.html        — Extension popup with color legend
+├── icon16.png        — Icons
+├── icon48.png
+└── icon128.png
+```
+
+> **Heads up:** The extension uses Developer mode (load unpacked). A Chrome Web Store version is on the roadmap.
+
+---
+
+## MCP Server — Claude Code integration
+
+The MCP server adds 7 tools to Claude Code for programmatic drift tracking.
+
+### Install
 
 ```bash
 claude mcp add threadmap npx threadmap-mcp
 ```
 
-### Manual (any MCP client)
-
-```bash
-npm install -g threadmap-mcp
-```
-
-Add to your MCP config (`~/.claude/claude_desktop_config.json` or similar):
+Or manually add to `~/.claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "threadmap": {
-      "command": "threadmap-mcp"
+      "command": "npx",
+      "args": ["threadmap-mcp"]
     }
   }
 }
 ```
 
-### Chrome Extension (visual dots in claude.ai)
-
-For color dots directly inside claude.ai, install the Chrome extension:
-
-1. Download the [`threadmap-chrome`](./threadmap-chrome) folder
-2. Go to `chrome://extensions` → enable **Developer mode**
-3. Click **Load unpacked** → select the folder
-4. Open claude.ai — dots appear automatically
-
----
-
-## Quick Start
-
-### 1. Track messages as you go
+### Quick start
 
 ```
-threadmap_track(
-  sessionId="myproject",
-  role="user",
-  content="build me a login system with JWT auth"
-)
-```
+threadmap_track(sessionId="myproject", role="user", content="build me a login system with JWT auth")
+→ 🔵 Blue — Drift: 0% — Origin intent set
 
-Response:
-```
-🔵 Blue — Drift: 0%
-Topic: build me a login system with JWT auth
-Message #1 tracked.
-```
+threadmap_track(sessionId="myproject", role="user", content="the refresh token keeps expiring after 30 seconds")
+→ 🟠 Orange — Drift: 63% — ⚡ INFLECTION POINT detected
 
-A few messages later...
-
-```
-threadmap_track(
-  sessionId="myproject",
-  role="user",
-  content="the refresh token keeps expiring after 30 seconds, lets debug this"
-)
-```
-
-Response:
-```
-🟠 Orange — Drift: 63%
-Topic: the refresh token keeps expiring after 30 seconds
-⚡ INFLECTION POINT — significant topic shift detected. Consider forking here.
-Message #8 tracked.
-```
-
-### 2. See your full timeline
-
-```
 threadmap_timeline(sessionId="myproject")
+→ Full color-coded map of all messages with fork instructions
+
+threadmap_fork(sessionId="myproject", messageIndex=6, branchName="jwt-debug")
+→ 🌿 Branch created — clean context from messages 1–7
 ```
 
-Response:
-```
-📍 ThreadMap Timeline — Session: myproject
-🎯 Origin Intent: build me a login system with JWT auth
+### All 7 tools
 
-Messages (8 total):
-
-1. 🔵 Blue   [0%]  USER: build me a login system with JWT auth
-2. 🟢 Green  [18%] Claude: here's the auth architecture with JWT...
-3. 🔵 Blue   [12%] USER: add refresh token support
-4. 🟢 Green  [24%] Claude: here's the refresh token implementation...
-5. 🟡 Yellow [38%] USER: the expiry time seems off
-6. 🟡 Yellow [41%] Claude: let me check the token configuration...
-7. 🟠 Orange [63%] USER: refresh token keeps expiring after 30s ← INFLECTION POINT
-8. 🔴 Red    [71%] Claude: let's debug the token lifecycle...
-
-⚡ Inflection Points:
-1. 🟠 Orange at message #7: Topic shifted: refresh token expiry debug
-   → Fork: call threadmap_fork with messageIndex: 6
-```
-
-### 3. Fork from an inflection point
-
-```
-threadmap_fork(
-  sessionId="myproject",
-  messageIndex=6,
-  branchName="jwt-debug"
-)
-```
-
-Response:
-```
-🌿 Branch Created: "jwt-debug"
-Branch ID: branch_1712345678
-Forked at: Message #7 — refresh token keeps expiring
-Context: 7 messages carried forward
-Origin preserved: build me a login system with JWT auth
-```
-
-### 4. Resume from the branch
-
-```
-threadmap_branch_context(
-  sessionId="myproject",
-  branchId="branch_1712345678"
-)
-```
+| Tool | What it does |
+|------|-------------|
+| `threadmap_track` | Track a message, get drift score + color |
+| `threadmap_timeline` | Full color-coded conversation map |
+| `threadmap_fork` | Fork from any message index |
+| `threadmap_branch_context` | Clean context packet for any branch |
+| `threadmap_status` | Quick current drift check |
+| `threadmap_reset` | Archive thread, start fresh |
+| `threadmap_legend` | Show color reference guide |
 
 ---
 
-## All Tools
+## Color system
 
-### `threadmap_track`
-Track a message and get its drift score.
+| Color | Drift | Meaning |
+|-------|-------|---------|
+| 🔵 Blue | 0–15% | On track — core intent |
+| 🟢 Green | 16–35% | Productive expansion |
+| 🟡 Yellow | 36–55% | Adjacent drift |
+| 🟠 Orange | 56–72% | **Inflection point** — meaningful pivot |
+| 🔴 Red | 73–88% | Full context break |
+| 🟣 Purple | 89–95% | Meta — talking about the conversation |
+| ⚪ White | 96–100% | Resolution |
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `sessionId` | string | Unique ID for this conversation/project |
-| `role` | `"user"` \| `"assistant"` | Who sent the message |
-| `content` | string | The message text |
-
----
-
-### `threadmap_timeline`
-Show the full color-coded conversation map.
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `sessionId` | string | Session to display |
+Orange and Red = fork candidates. The conversation has left your original intent behind.
 
 ---
 
-### `threadmap_fork`
-Fork from any message index with clean context.
+## Real-world use cases
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `sessionId` | string | Session to fork from |
-| `messageIndex` | number | 0-based index of the fork point |
-| `branchName` | string | Name for the branch |
+**Claude Code — architecture integrity**
+Track every message while building. Orange = scope creep. Fork before the drift gets worse. Architecture decisions from the first 10 messages stay clean.
 
----
+**Long previous conversations**
+Click ↺ rescan in the Chrome extension. ThreadMap scrolls to the top, loads all messages, scans every one, then returns you to the bottom — all dots appear.
 
-### `threadmap_branch_context`
-Get the context packet for a branch to resume cleanly.
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `sessionId` | string | Session ID |
-| `branchId` | string | Branch ID from `threadmap_fork` |
+**Team handoffs**
+Use `threadmap_branch_context` to extract a clean summary of what was decided. Paste it into a new session — no scrolling through 200 messages.
 
 ---
 
-### `threadmap_status`
-Quick current drift check.
+## Why open source?
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `sessionId` | string | Session to check |
+Non-linear conversation navigation is the missing primitive for AI-native work. Right now Claude conversations are books with no table of contents, no chapters, no bookmarks.
 
----
-
-### `threadmap_reset`
-Archive current thread and start fresh.
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `sessionId` | string | Session to reset |
-| `newOriginContent` | string | New starting message |
-
----
-
-### `threadmap_legend`
-Show the color reference guide.
-
----
-
-## Real-World Use Cases
-
-### Claude Code — Architecture Integrity
-Track every message. When you see Orange, scope is creeping. Fork before the drift gets worse.
-
-```
-Session: "build a user dashboard with real-time updates"
-Message 1-5:   🔵🟢🟢🔵🟢   (core architecture — on track)
-Message 6-8:   🟡🟡🟠         (WebSocket config tangent) ← fork here
-Message 9-15:  🔴🔴🟣🔴       (deep debugging rabbit hole)
-```
-
-### Long Research Sessions — Stay on Topic
-ThreadMap shows you exactly when you left the original question. Jump back to the moment before the drift.
-
-### Brainstorming — Preserve the Original Spark
-ThreadMap keeps a pointer to the first moment of clarity — fork back to it anytime.
-
-### Team Handoffs — Clean Context Packets
-Use `threadmap_branch_context` to extract a clean summary of what was decided. Drop it into a new Claude session.
-
----
-
-## Architecture
-
-- **Zero external API calls** — drift scoring runs locally using keyword-based semantic comparison
-- **No database required** — in-memory session state, zero setup
-- **Works with Claude Code natively** via MCP protocol
-- **Chrome extension** for visual dots in claude.ai
-
----
-
-## Why Open Source?
-
-This should be a **protocol**, not a product. Like Markdown. Like Git.
-
-Non-linear conversation navigation is the missing primitive for AI-native work. If this becomes the standard, it travels across Claude, GPT, Gemini, anything. Nobody owns it. Everybody benefits.
+ThreadMap is the table of contents. If this becomes the standard, it travels across Claude, GPT, Gemini, anything. Nobody owns it. Everybody benefits.
 
 ---
 
 ## Roadmap
 
-- [ ] Local embedding model support (MiniLM) for richer semantic scoring
-- [ ] Visual timeline export (SVG/HTML)
+- [ ] Local embedding model (MiniLM) for richer semantic scoring
+- [ ] Chrome extension on Chrome Web Store (no developer mode required)
 - [ ] Cross-session persistence (SQLite mode)
-- [ ] Chrome extension on Chrome Web Store
+- [ ] Visual timeline export (SVG/HTML)
 - [ ] GPT / Gemini compatibility
 
 ---
@@ -304,6 +187,8 @@ cd threadmap-mcp
 npm install
 npm run build
 ```
+
+PRs welcome especially for: better drift scoring, Chrome extension improvements, and other AI platform support.
 
 ---
 

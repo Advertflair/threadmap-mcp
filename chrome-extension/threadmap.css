@@ -1,0 +1,41 @@
+/* ThreadMap for Claude - injected styles */
+
+.tm-bar {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(26, 26, 26, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #2a2a2a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.tm-status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #888; }
+.tm-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; background: #1a3a5c; color: #5ab4f5; transition: all 0.3s ease; }
+.tm-actions { display: flex; gap: 6px; }
+.tm-btn { font-size: 11px; padding: 4px 10px; background: transparent; border: 1px solid #333; border-radius: 4px; color: #888; cursor: pointer; transition: all 0.15s; }
+.tm-btn:hover { background: #2a2a2a; color: #ccc; border-color: #555; }
+.tm-dot { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; transition: transform 0.15s; }
+.tm-dot:hover { transform: scale(1.5); }
+.tm-dot.tm-inflection { animation: tm-pulse 2s infinite; }
+@keyframes tm-pulse { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+.tm-tooltip { position: fixed; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #ddd; pointer-events: none; z-index: 99999; max-width: 220px; line-height: 1.5; display: none; font-family: -apple-system, sans-serif; }
+.tm-tooltip.visible { display: block; }
+.tm-panel { position: fixed; top: 0; right: 0; width: 280px; height: 100vh; background: #111; border-left: 1px solid #2a2a2a; z-index: 99998; display: flex; flex-direction: column; font-family: -apple-system, sans-serif; transform: translateX(100%); transition: transform 0.25s ease; }
+.tm-panel.open { transform: translateX(0); }
+.tm-panel-header { padding: 16px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: space-between; }
+.tm-panel-title { font-size: 13px; font-weight: 500; color: #ccc; }
+.tm-close { background: none; border: none; color: #555; cursor: pointer; font-size: 18px; line-height: 1; padding: 0; }
+.tm-close:hover { color: #aaa; }
+.tm-tl-list { flex: 1; overflow-y: auto; padding: 8px; }
+.tm-tl-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer; margin-bottom: 2px; }
+.tm-tl-row:hover { background: #1a1a1a; }
+.tm-tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+.tm-tl-content { flex: 1; }
+.tm-tl-num { font-size: 10px; color: #555; margin-bottom: 2px; }
+.tm-tl-text { font-size: 11px; color: #888; line-height: 1.4; }
+.tm-fork-btn { font-size: 10px; padding: 2px 7px; background: transparent; border: 1px solid #333; border-radius: 3px; color: #666; cursor: pointer; margin-top: 5px; display: block; transition: all 0.15s; }
+.tm-fork-btn:hover { background: #1e1e1e; color: #aaa; border-color: #555; }
