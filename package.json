@@ -1,0 +1,37 @@
+{
+  "name": "threadmap-mcp",
+  "version": "1.0.0",
+  "description": "Conversation drift visualization and forking for Claude — open source MCP server",
+  "main": "dist/index.js",
+  "bin": {
+    "threadmap-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "claude", "mcp", "model-context-protocol", "conversation",
+    "drift", "visualization", "focus", "productivity", "ai", "threadmap"
+  ],
+  "author": "ThreadMap Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Advertflair/threadmap-mcp"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": ["dist", "README.md", "LICENSE"]
+}
